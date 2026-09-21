@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#2E5A8C">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FastFit">
+<title>FastFit — Plan Tracker</title>
+<style>
+  :root{
+    --accent:#2E5A8C; --accent2:#3E77B5; --light:#EAF1F8; --band:#D6E3F0;
+    --ink:#1c2733; --grey:#667; --line:#dde5ee; --ok:#2e7d51; --warn:#c0392b;
+    --bg:#f4f7fb; --card:#ffffff; --radius:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.45;
+    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff; padding:calc(14px + env(safe-area-inset-top)) 18px 16px;
+    position:sticky; top:0; z-index:20;
+  }
+  header h1{margin:0; font-size:19px; letter-spacing:.2px; display:flex; align-items:center; gap:8px}
+  header .sub{opacity:.85; font-size:12px; margin-top:2px}
+  main{padding:14px; max-width:640px; margin:0 auto}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(30,50,80,.05)}
+  .card h2{margin:0 0 10px; font-size:15px; color:var(--accent); display:flex; align-items:center; gap:8px}
+  .muted{color:var(--grey); font-size:13px}
+  .row{display:flex; gap:10px; align-items:center}
+  .between{display:flex; justify-content:space-between; align-items:center; gap:10px}
+  .pill{display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600}
+  .pill.fast{background:#e8eefc; color:#33488a}
+  .pill.eat{background:#e5f4ec; color:#1f7a4d}
+  button{font-family:inherit; cursor:pointer; border:none; border-radius:12px; font-size:15px; font-weight:600; padding:12px 16px; transition:transform .05s, opacity .15s}
+  button:active{transform:scale(.98)}
+  .btn{background:var(--accent); color:#fff; width:100%}
+  .btn.sec{background:var(--light); color:var(--accent)}
+  .btn.ghost{background:transparent; color:var(--accent); border:1px solid var(--band)}
+  .btn.warn{background:#fdecea; color:var(--warn)}
+  .btn.sm{padding:8px 12px; font-size:13px; width:auto}
+  .timer{font-size:40px; font-weight:800; letter-spacing:1px; text-align:center; margin:6px 0 2px; font-variant-numeric:tabular-nums}
+  .ring-wrap{display:flex; justify-content:center; margin:6px 0}
+  svg.ring{width:190px; height:190px}
+  .ringlabel{text-align:center}
+  .ringlabel .big{font-size:15px; font-weight:700}
+  .check{display:flex; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid var(--line)}
+  .check:last-child{border-bottom:none}
+  .check .box{flex:0 0 26px; height:26px; border-radius:8px; border:2px solid var(--band); background:#fff; display:flex; align-items:center; justify-content:center; margin-top:1px; font-size:16px; color:#fff}
+  .check.done .box{background:var(--ok); border-color:var(--ok)}
+  .check .title{font-weight:600; font-size:14px}
+  .check.done .title{text-decoration:line-through; color:var(--grey)}
+  .check .time{font-size:12px; color:var(--accent); font-weight:700}
+  .check .desc{font-size:12.5px; color:var(--grey)}
+  .tag{font-size:11px; padding:1px 7px; border-radius:6px; background:var(--light); color:var(--accent); font-weight:600; margin-left:6px}
+  input,select,textarea{font-family:inherit; font-size:16px; width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink)}
+  label.fld{display:block; font-size:12px; font-weight:600; color:var(--grey); margin:10px 0 4px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px}
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{padding:7px 6px; text-align:left; border-bottom:1px solid var(--line)}
+  th{color:var(--accent); font-size:11px; text-transform:uppercase; letter-spacing:.4px}
+  td.n{text-align:center; font-variant-numeric:tabular-nums}
+  .stat{display:flex; gap:10px}
+  .stat .box2{flex:1; background:var(--light); border-radius:12px; padding:10px; text-align:center}
+  .stat .box2 .v{font-size:20px; font-weight:800; color:var(--accent)}
+  .stat .box2 .l{font-size:11px; color:var(--grey)}
+  nav{position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--line);
+    display:flex; z-index:30; padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1; background:none; border:none; padding:9px 2px 8px; border-radius:0; color:var(--grey); font-size:10.5px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:3px}
+  nav button .ic{font-size:20px; line-height:1}
+  nav button.active{color:var(--accent)}
+  .view{display:none} .view.active{display:block}
+  .day{border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden}
+  .day .dh{background:var(--accent); color:#fff; padding:9px 12px; font-weight:700; font-size:13px; display:flex; justify-content:space-between}
+  .day .db{padding:6px 12px 10px}
+  .toast{position:fixed; left:14px; right:14px; bottom:calc(80px + env(safe-area-inset-bottom)); background:var(--ink); color:#fff; padding:13px 16px; border-radius:12px; z-index:50; box-shadow:0 6px 20px rgba(0,0,0,.25); font-size:14px; opacity:0; transform:translateY(10px); transition:.25s; pointer-events:none}
+  .toast.show{opacity:1; transform:translateY(0)}
+  .banner{background:linear-gradient(135deg,#eaf1f8,#dbe7f5); border:1px solid var(--band); border-radius:14px; padding:14px; margin-bottom:14px}
+  .banner .big{font-size:16px; font-weight:800; color:var(--accent)}
+  .note{font-size:12px; color:var(--grey); background:#fbfcfe; border:1px dashed var(--band); border-radius:10px; padding:10px; margin-top:10px}
+  .hide{display:none!important}
+  canvas{width:100%; height:180px; display:block}
+  .filewrap{position:relative; overflow:hidden}
+  .filewrap input[type=file]{position:absolute; inset:0; opacity:0}
+  .small{font-size:12px}
+  .center{text-align:center}
+  .del{color:var(--warn); background:none; padding:4px 8px; font-size:12px; width:auto}
+
+  /* ============ COACH (camera + calisthenics scoring) ============ */
+  .exgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .exbtn{display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left;
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:11px 12px; width:100%; color:var(--ink)}
+  .exbtn .ic{font-size:22px; line-height:1}
+  .exbtn .nm{font-weight:700; font-size:13.5px}
+  .exbtn .tg{font-size:11px; color:var(--grey)}
+  .exbtn.sel{border-color:var(--accent); background:var(--light); box-shadow:0 0 0 1px var(--accent) inset}
+  .stage{position:relative; width:100%; aspect-ratio:3/4; max-height:64vh; background:#0d1420;
+    border-radius:16px; overflow:hidden; border:1px solid var(--line)}
+  .stage video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    transform:scaleX(-1); background:#0d1420}
+  .stage canvas{position:absolute; inset:0; width:100%; height:100%}
+  .stage .placeholder{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:10px; color:#c7d4e6; text-align:center; padding:24px; font-size:13.5px}
+  .stage .placeholder .em{font-size:40px}
+  .hud{position:absolute; left:0; right:0; top:0; padding:12px 12px 26px;
+    background:linear-gradient(#0009,transparent); color:#fff; display:flex; justify-content:space-between; align-items:flex-start; gap:10px}
+  .hud .repcount{font-size:52px; font-weight:800; line-height:.95; font-variant-numeric:tabular-nums; text-shadow:0 2px 8px #0007}
+  .hud .repcount small{display:block; font-size:11px; font-weight:700; letter-spacing:.6px; opacity:.85; text-transform:uppercase}
+  .hud .rightcol{text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:6px}
+  .phasepill{padding:4px 11px; border-radius:999px; font-size:12px; font-weight:800; background:#ffffff28; backdrop-filter:blur(4px)}
+  .phasepill.down{background:#e4694f}
+  .phasepill.up{background:#63c09a; color:#0d1420}
+  .formbar{width:120px; height:8px; background:#ffffff33; border-radius:999px; overflow:hidden}
+  .formbar i{display:block; height:100%; width:0%; background:#63c09a; transition:width .12s, background .2s}
+  .coachfoot{position:absolute; left:0; right:0; bottom:0; padding:26px 12px 12px;
+    background:linear-gradient(transparent,#000a); color:#fff}
+  .coachcue{font-size:14px; font-weight:600; min-height:20px; text-shadow:0 1px 4px #0008}
+  .lastrep{font-size:12px; opacity:.9; margin-top:2px}
+  .countdown{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:110px; font-weight:800; color:#fff; text-shadow:0 3px 18px #000a; background:#0007}
+  .coachbtns{display:flex; gap:8px; margin-top:12px}
+  .coachbtns button{flex:1}
+  .sumrow{display:flex; gap:8px; margin:10px 0}
+  .sumrow .box2{flex:1; background:var(--light); border-radius:12px; padding:12px 8px; text-align:center}
+  .sumrow .box2 .v{font-size:24px; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums}
+  .sumrow .box2 .l{font-size:11px; color:var(--grey)}
+  .gradebig{font-size:44px; font-weight:800; text-align:center; line-height:1}
+  .histrow{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
+  .histrow:last-child{border-bottom:none}
+  .histrow .g{font-weight:800; color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔥 FastFit <span id="statusPill"></span></h1>
+  <div class="sub" id="headSub">Your 16:8 plan tracker</div>
+</header>
+
+<main>
+  <!-- ================= TODAY ================= -->
+  <section id="v-today" class="view active">
+    <div class="banner">
+      <div class="between">
+        <div>
+          <div class="muted" id="phaseLabel">—</div>
+          <div class="big" id="phaseState">—</div>
+        </div>
+        <span class="pill" id="phasePill">—</span>
+      </div>
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="86" fill="none" stroke="#d7e2f1" stroke-width="14"/>
+          <circle id="ringFg" cx="100" cy="100" r="86" fill="none" stroke="#2E5A8C" stroke-width="14"
+            stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="540" transform="rotate(-90 100 100)"/>
+          <text id="ringTime" x="100" y="97" text-anchor="middle" font-size="30" font-weight="800" fill="#2E5A8C">--:--</text>
+          <text id="ringSub" x="100" y="122" text-anchor="middle" font-size="12" fill="#667">until —</text>
+        </svg>
+      </div>
+      <div class="grid2">
+        <button class="btn sec sm" onclick="shiftWindowPrompt()">Adjust window</button>
+        <button class="btn sec sm" onclick="go('fast')">Fasting details</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="between"><h2 style="margin:0">🍽️ Next meal</h2><span class="muted" id="nextMealTime"></span></div>
+      <div id="nextMealBody" class="muted">—</div>
+    </div>
+
+    <div class="card">
+      <h2>✅ Today’s checklist</h2>
+      <div id="todayList"></div>
+      <button class="btn ghost sm" style="margin-top:10px; width:100%" onclick="resetToday()">Reset today’s ticks</button>
+    </div>
+  </section>
+
+  <!-- ================= FASTING ================= -->
+  <section id="v-fast" class="view">
+    <div class="card">
+      <h2>⏱️ Fasting window</h2>
+      <div class="stat" style="margin-bottom:12px">
+        <div class="box2"><div class="v" id="fLen">16h</div><div class="l">Fast</div></div>
+        <div class="box2"><div class="v" id="eLen">8h</div><div class="l">Eating</div></div>
+      </div>
+      <div class="grid2">
+        <div><label class="fld">Eating starts</label><input type="time" id="eatStart"></div>
+        <div><label class="fld">Eating ends</label><input type="time" id="eatEnd"></div>
+      </div>
+      <button class="btn" style="margin-top:12px" onclick="saveWindow()">Save window</button>
+      <div class="note">During the fast, only water, black coffee or plain tea. A pinch of cayenne or a squeeze of lemon in water is fine to curb appetite.</div>
+    </div>
+    <div class="card">
+      <h2>🔔 Reminders</h2>
+      <div class="check"><div class="box" id="nOn">•</div><div><div class="title">Notifications</div><div class="desc" id="notifState">Tap to enable phone alerts</div></div></div>
+      <button class="btn sec" style="margin-top:10px" onclick="enableNotifs()">Enable notifications</button>
+      <label class="row" style="margin-top:12px; font-size:14px; font-weight:600; gap:10px">
+        <input type="checkbox" id="remMeals" style="width:auto" onchange="saveSettings()"> Remind me about meals
+      </label>
+      <label class="row" style="margin-top:8px; font-size:14px; font-weight:600; gap:10px">
+        <input type="checkbox" id="remSupps" style="width:auto" onchange="saveSettings()"> Remind me about supplements
+      </label>
+      <label class="row" style="margin-top:8px; font-size:14px; font-weight:600; gap:10px">
+        <input type="checkbox" id="remFast" style="width:auto" onchange="saveSettings()"> Notify when fast / eating window flips
+      </label>
+      <div class="note" id="notifNote">Reminders fire while FastFit is open in your browser. For alarms that ring when the app is closed, add this page to your home screen and keep it running, or set matching alarms in your phone’s Clock app. I can also give you a calendar file if you’d like.</div>
+    </div>
+  </section>
+
+  <!-- ================= MEALS ================= -->
+  <section id="v-meals" class="view">
+    <div class="card">
+      <h2>🍽️ Meal plan</h2>
+      <div class="muted small" id="mealTargets"></div>
+      <div id="mealsList" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <h2>🕑 Meal times</h2>
+      <div id="mealTimes"></div>
+      <div class="note">Set the clock time you want each meal reminder. Keep them inside your eating window.</div>
+    </div>
+  </section>
+
+  <!-- ================= SUPPLEMENTS ================= -->
+  <section id="v-supps" class="view">
+    <div class="card">
+      <h2>💊 Supplements</h2>
+      <div id="suppsList"></div>
+    </div>
+    <div class="card">
+      <h2>🕑 Supplement times</h2>
+      <div id="suppTimes"></div>
+      <div class="note">These are optional — food comes first. Check with your doctor or pharmacist before starting any, especially with medication or blood-pressure concerns.</div>
+    </div>
+  </section>
+
+  <!-- ================= PROGRESS ================= -->
+  <section id="v-prog" class="view">
+    <div class="card">
+      <h2>📈 Progress</h2>
+      <div class="stat">
+        <div class="box2"><div class="v" id="pNow">—</div><div class="l">Now (kg)</div></div>
+        <div class="box2"><div class="v" id="pChange">—</div><div class="l">Since start</div></div>
+        <div class="box2"><div class="v" id="pBmi">—</div><div class="l">BMI</div></div>
+      </div>
+      <canvas id="chart" width="600" height="180" style="margin-top:14px"></canvas>
+    </div>
+    <div class="card">
+      <h2>➕ Log a weigh-in</h2>
+      <div class="grid2">
+        <div><label class="fld">Date</label><input type="date" id="inDate"></div>
+        <div><label class="fld">Weight (kg)</label><input type="number" step="0.1" id="inWeight" inputmode="decimal"></div>
+      </div>
+      <div class="grid3">
+        <div><label class="fld">Waist (in)</label><input type="number" step="0.1" id="inWaist" inputmode="decimal"></div>
+        <div><label class="fld">Chest (in)</label><input type="number" step="0.1" id="inChest" inputmode="decimal"></div>
+        <div><label class="fld">Body fat %</label><input type="number" step="0.1" id="inBf" inputmode="decimal"></div>
+      </div>
+      <label class="fld">Notes</label><input type="text" id="inNote" placeholder="optional">
+      <button class="btn" style="margin-top:12px" onclick="addEntry()">Save entry</button>
+    </div>
+    <div class="card">
+      <h2>🗒️ History</h2>
+      <div id="histWrap"><div class="muted small">No entries yet.</div></div>
+    </div>
+  </section>
+
+  <!-- ================= WORKOUT ================= -->
+  <section id="v-work" class="view">
+    <div class="card">
+      <h2>🏋️ Weekly training</h2>
+      <div id="workoutList"></div>
+    </div>
+  </section>
+
+  <!-- ================= COACH ================= -->
+  <section id="v-coach" class="view">
+    <div class="card">
+      <h2>🎯 Form Coach</h2>
+      <div class="muted small">Your phone's front camera counts your reps and scores your form on-device with MediaPipe. Nothing is recorded or uploaded. Prop the phone up, stand back so your whole body is in frame, and give yourself ~2 m of clear floor.</div>
+      <div class="exgrid" id="exGrid" style="margin-top:12px"></div>
+      <div class="note" id="exTip">Pick an exercise to begin.</div>
+    </div>
+
+    <div class="card">
+      <div class="stage" id="stage">
+        <video id="vid" playsinline muted></video>
+        <canvas id="pose"></canvas>
+        <div class="placeholder" id="camPlaceholder">
+          <div class="em">📷</div>
+          <div>Camera is off. Tap <b>Start camera</b> below, then <b>Start set</b> when you're ready in frame.</div>
+        </div>
+        <div class="hud hide" id="hud">
+          <div class="repcount"><span id="repNum">0</span><small id="repUnit">reps</small></div>
+          <div class="rightcol">
+            <span class="phasepill" id="phasePillC">Ready</span>
+            <div class="formbar"><i id="formBar"></i></div>
+          </div>
+        </div>
+        <div class="coachfoot hide" id="coachFoot">
+          <div class="coachcue" id="coachCue">—</div>
+          <div class="lastrep" id="lastRep"></div>
+        </div>
+        <div class="countdown hide" id="countdown">3</div>
+      </div>
+
+      <div class="coachbtns">
+        <button class="btn sec" id="btnCam" onclick="Coach.toggleCam()">Start camera</button>
+        <button class="btn" id="btnSet" onclick="Coach.toggleSet()" disabled>Start set</button>
+      </div>
+      <div id="camErr" class="small" style="color:var(--warn); margin-top:8px"></div>
+    </div>
+
+    <div class="card hide" id="sumCard">
+      <h2>✅ Set summary</h2>
+      <div class="gradebig" id="sumGrade">—</div>
+      <div class="center muted small" id="sumEx">—</div>
+      <div class="sumrow" id="sumStats"></div>
+      <div class="note" id="sumMsg"></div>
+      <button class="btn sec sm" style="margin-top:10px;width:auto" onclick="Coach.clearSummary()">Done</button>
+    </div>
+
+    <div class="card" id="histCard">
+      <h2>📊 Recent sets</h2>
+      <div id="coachHist"><div class="muted small">No sets logged yet. Your scored sets will appear here.</div></div>
+    </div>
+  </section>
+
+  <!-- ================= SETTINGS ================= -->
+  <section id="v-set" class="view">
+    <div class="card" id="installCard">
+      <h2>📲 Install FastFit</h2>
+      <div class="muted small">Add FastFit to your home screen so it opens like a normal app, full-screen and offline.</div>
+      <button class="btn hide" id="installBtn" style="margin-top:12px" onclick="installApp()">Add to home screen</button>
+      <div class="note">On <b>Android/Chrome</b> an “Add to home screen” button appears here. On <b>iPhone/Safari</b>, tap the <b>Share</b> icon then <b>Add to Home Screen</b>.</div>
+    </div>
+    <div class="card">
+      <h2>📄 Load your plan</h2>
+      <div class="muted small">Upload the Excel workbook to refresh meals, supplements, workout and your details. Your ticks and weigh-ins stay.</div>
+      <div class="filewrap" style="margin-top:12px">
+        <button class="btn">Choose Excel file (.xlsx)</button>
+        <input type="file" id="xlsxFile" accept=".xlsx,.xls" onchange="handleUpload(event)">
+      </div>
+      <div id="uploadMsg" class="small" style="margin-top:10px"></div>
+      <button class="btn sec" style="margin-top:10px" onclick="loadDefaults(true)">Reset to built-in plan</button>
+    </div>
+    <div class="card">
+      <h2>👤 Your details</h2>
+      <div class="grid2">
+        <div><label class="fld">Height (cm)</label><input type="number" id="setHeight" oninput="saveSettings()"></div>
+        <div><label class="fld">Start weight (kg)</label><input type="number" id="setStart" oninput="saveSettings()"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🗓️ Calendar reminders</h2>
+      <div class="muted small">Download an .ics file with your daily meal, supplement and fasting times, then open it to add alarms to your phone’s calendar — these ring even when FastFit is closed.</div>
+      <button class="btn sec" style="margin-top:12px" onclick="downloadICS()">Download calendar file</button>
+    </div>
+    <div class="card">
+      <h2>⚠️ Data</h2>
+      <button class="btn warn" onclick="wipe()">Erase all my data</button>
+      <div class="note">Everything is stored only on this device, in this browser. Nothing is sent anywhere.</div>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button data-v="today" class="active" onclick="go('today')"><span class="ic">🏠</span>Today</button>
+  <button data-v="meals" onclick="go('meals')"><span class="ic">🍽️</span>Meals</button>
+  <button data-v="supps" onclick="go('supps')"><span class="ic">💊</span>Supps</button>
+  <button data-v="prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
+  <button data-v="work" onclick="go('work')"><span class="ic">🏋️</span>Workout</button>
+  <button data-v="coach" onclick="go('coach')"><span class="ic">🎯</span>Coach</button>
+  <button data-v="set" onclick="go('set')"><span class="ic">⚙️</span>Setup</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ---------- storage helpers ---------- */
+const K = {plan:'ff_plan', prog:'ff_prog', set:'ff_settings', ticks:'ff_ticks', fired:'ff_fired'};
+const load = (k, d) => { try{ const v = localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
+const save = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+const todayKey = () => new Date().toISOString().slice(0,10);
+const pad = n => String(n).padStart(2,'0');
+
+/* ---------- default plan (matches the Excel) ---------- */
+function defaultPlan(){
+  return {
+    height:185, startWeight:135,
+    window:{start:'12:00', end:'20:00'},
+    meals:[
+      {id:'m1', name:'Meal 1', time:'12:00', items:['4 eggs with spinach & tomato','200 g plain yoghurt','1 piece of fruit'], note:'Breaks the fast'},
+      {id:'m2', name:'Meal 2', time:'16:00', items:['180–200 g grilled chicken','Large salad with olive oil','Small bulgur or rice (150 g)']},
+      {id:'sn', name:'Snack', time:'17:30', items:['1 apple + handful of almonds','or 150 g cottage cheese']},
+      {id:'m3', name:'Meal 3', time:'19:30', items:['Grilled fish or lean meat (or lentils)','Plenty of vegetables','Small whole-grain portion'], note:'Last food by end of window'}
+    ],
+    mealTargets:'≈ 2,000 kcal/day · 150–180 g protein · anchor every meal with protein.',
+    supps:[
+      {id:'s1', slot:'Morning', time:'08:00', items:['Fish oil (omega-3) 1–2 g','Vitamin D3 1000–2000 IU','Vitamin C 500–1000 mg (optional)']},
+      {id:'s2', slot:'Night', time:'22:00', items:['Magnesium 300–400 mg']},
+      {id:'s3', slot:'Before training', time:'17:00', items:['Creatine 3–5 g (any time works)']},
+      {id:'s4', slot:'After training', time:'18:30', items:['Whey / iso protein (1 scoop) if you missed protein at meals']}
+    ],
+    workout:[
+      {day:'Mon', focus:'Full Body A + 30 min walk', ex:['Squat or Leg Press — 3×8–12','Chest Press — 3×8–12','Seated Cable Row — 3×10–12','Lat Pulldown — 3×10–12','Overhead Press — 3×8–12','Plank — 3×30–45s']},
+      {day:'Tue', focus:'Brisk walk 60–90 min', ex:['Slightly breathless pace, can still talk']},
+      {day:'Wed', focus:'Full Body B + 30 min walk', ex:['Hack Squat or Leg Press — 3×10–12','Incline DB Press — 3×10–12','Machine/Bent-over Row — 3×10–12','Lat Pulldown (neutral) — 3×10–12','Seated DB Shoulder Press — 3×10–12','Hip Thrust — 3×10–12','Plank — 3×30–45s']},
+      {day:'Thu', focus:'Brisk walk 60–90 min', ex:['Add gentle hills to raise effort']},
+      {day:'Fri', focus:'Full Body A + 30 min walk', ex:['Repeat Monday — beat last week’s loads or reps']},
+      {day:'Sat', focus:'Long walk 90–120 min', ex:['Steady comfortable pace, good shoes']},
+      {day:'Sun', focus:'Rest or easy stroll', ex:['Recovery — light movement only']}
+    ]
+  };
+}
+
+let plan = load(K.plan, null) || defaultPlan();
+let settings = load(K.set, {remMeals:true, remSupps:true, remFast:true, notif:false});
+let progress = load(K.prog, []);
+let ticks = load(K.ticks, {});   // {date:{itemId:true}}
+let fired = load(K.fired, {});   // {date:{key:true}}
+
+/* ---------- time utilities ---------- */
+function toMin(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
+function nowMin(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+function fmtDur(mins){ mins=Math.max(0,Math.round(mins)); const h=Math.floor(mins/60), m=mins%60; return h>0?`${h}h ${pad(m)}m`:`${m}m`; }
+function within(start,end,t){ // handles wrap past midnight; returns true if t in [start,end)
+  if(start<=end) return t>=start && t<end;
+  return t>=start || t<end;
+}
+
+/* ---------- phase / ring ---------- */
+function computePhase(){
+  const s=toMin(plan.window.start), e=toMin(plan.window.end), t=nowMin();
+  const eating = within(s,e,t);
+  let target, targetLabel, spanStart, spanEnd;
+  if(eating){ target=e; targetLabel='fast begins'; spanStart=s; spanEnd=e; }
+  else { target=s; targetLabel='eating opens'; spanStart=e; spanEnd=s; }
+  let rem = target - t; if(rem<0) rem+=1440;
+  let span = spanEnd - spanStart; if(span<=0) span+=1440;
+  let done = span - rem; if(done<0) done+=1440;
+  const frac = Math.min(1, Math.max(0, done/span));
+  return {eating, rem, frac, targetLabel, target};
+}
+function renderRing(){
+  const p=computePhase();
+  const fg=document.getElementById('ringFg');
+  const C=2*Math.PI*86;
+  fg.setAttribute('stroke-dasharray', C.toFixed(1));
+  fg.setAttribute('stroke-dashoffset', (C*(1-p.frac)).toFixed(1));
+  fg.setAttribute('stroke', p.eating? '#2e7d51':'#2E5A8C');
+  document.getElementById('ringTime').textContent = fmtDur(p.rem);
+  document.getElementById('ringSub').textContent = 'until '+p.targetLabel;
+  document.getElementById('phaseLabel').textContent = p.eating? 'Eating window open':'Fasting';
+  document.getElementById('phaseState').textContent = p.eating? 'Fuel up 🍽️':'Stay strong 💧';
+  const pill=document.getElementById('phasePill');
+  pill.className='pill '+(p.eating?'eat':'fast');
+  pill.textContent=p.eating?'EATING':'FASTING';
+  const hp=document.getElementById('statusPill');
+  hp.className='pill '+(p.eating?'eat':'fast'); hp.textContent=p.eating?'eating':'fasting';
+  document.getElementById('headSub').textContent = (p.eating?'Eating window ':'Fasting ')+'· '+fmtDur(p.rem)+' to '+p.targetLabel;
+}
+
+/* ---------- checklist items for today ---------- */
+function todayItems(){
+  const items=[];
+  plan.meals.forEach(m=> items.push({id:m.id, time:m.time, title:`${m.name}`, desc:m.items.join(' · '), tag:'meal'}));
+  plan.supps.forEach(s=> items.push({id:s.id, time:s.time, title:s.slot, desc:s.items.join(' · '), tag:'supp'}));
+  items.sort((a,b)=> toMin(a.time)-toMin(b.time));
+  return items;
+}
+function isTicked(id){ const d=ticks[todayKey()]||{}; return !!d[id]; }
+function toggleTick(id){
+  const dk=todayKey(); ticks[dk]=ticks[dk]||{}; ticks[dk][id]=!ticks[dk][id];
+  save(K.ticks,ticks); renderToday();
+}
+function renderToday(){
+  const list=document.getElementById('todayList'); list.innerHTML='';
+  todayItems().forEach(it=>{
+    const done=isTicked(it.id);
+    const el=document.createElement('div');
+    el.className='check'+(done?' done':'');
+    el.innerHTML=`<div class="box">${done?'✓':''}</div>
+      <div style="flex:1">
+        <div class="between"><span class="title">${it.title}<span class="tag">${it.tag==='meal'?'meal':'supp'}</span></span><span class="time">${it.time}</span></div>
+        <div class="desc">${it.desc}</div>
+      </div>`;
+    el.onclick=()=>toggleTick(it.id);
+    list.appendChild(el);
+  });
+  // next meal card
+  const t=nowMin();
+  const upcoming=plan.meals.filter(m=>toMin(m.time)>=t).sort((a,b)=>toMin(a.time)-toMin(b.time));
+  const nm=upcoming[0]||plan.meals[0];
+  document.getElementById('nextMealTime').textContent=nm.time+(upcoming[0]?'':' (tomorrow)');
+  document.getElementById('nextMealBody').innerHTML=`<b>${nm.name}</b> — ${nm.items.join(' · ')}`;
+}
+function resetToday(){ ticks[todayKey()]={}; save(K.ticks,ticks); renderToday(); toast('Today’s ticks cleared'); }
+
+/* ---------- meals & supps views ---------- */
+function renderMeals(){
+  document.getElementById('mealTargets').textContent=plan.mealTargets||'';
+  const box=document.getElementById('mealsList'); box.innerHTML='';
+  plan.meals.forEach(m=>{
+    const d=document.createElement('div'); d.className='day';
+    d.innerHTML=`<div class="dh"><span>${m.name}</span><span>${m.time}</span></div>
+      <div class="db">${m.items.map(i=>`<div class="small">• ${i}</div>`).join('')}${m.note?`<div class="muted small" style="margin-top:4px">${m.note}</div>`:''}</div>`;
+    box.appendChild(d);
+  });
+  const tw=document.getElementById('mealTimes'); tw.innerHTML='';
+  plan.meals.forEach(m=>{
+    const row=document.createElement('div'); row.className='between'; row.style.margin='8px 0';
+    row.innerHTML=`<span class="small" style="font-weight:600">${m.name}</span>`;
+    const inp=document.createElement('input'); inp.type='time'; inp.value=m.time; inp.style.width='140px';
+    inp.onchange=()=>{ m.time=inp.value; save(K.plan,plan); renderToday(); toast(m.name+' set to '+m.time); };
+    row.appendChild(inp); tw.appendChild(row);
+  });
+}
+function renderSupps(){
+  const box=document.getElementById('suppsList'); box.innerHTML='';
+  plan.supps.forEach(s=>{
+    const d=document.createElement('div'); d.className='day';
+    d.innerHTML=`<div class="dh"><span>${s.slot}</span><span>${s.time}</span></div>
+      <div class="db">${s.items.map(i=>`<div class="small">• ${i}</div>`).join('')}</div>`;
+    box.appendChild(d);
+  });
+  const tw=document.getElementById('suppTimes'); tw.innerHTML='';
+  plan.supps.forEach(s=>{
+    const row=document.createElement('div'); row.className='between'; row.style.margin='8px 0';
+    row.innerHTML=`<span class="small" style="font-weight:600">${s.slot}</span>`;
+    const inp=document.createElement('input'); inp.type='time'; inp.value=s.time; inp.style.width='140px';
+    inp.onchange=()=>{ s.time=inp.value; save(K.plan,plan); renderToday(); toast(s.slot+' set to '+s.time); };
+    row.appendChild(inp); tw.appendChild(row);
+  });
+}
+function renderWorkout(){
+  const box=document.getElementById('workoutList'); box.innerHTML='';
+  plan.workout.forEach(w=>{
+    const d=document.createElement('div'); d.className='day';
+    d.innerHTML=`<div class="dh"><span>${w.day}</span><span>${w.focus}</span></div>
+      <div class="db">${w.ex.map(e=>`<div class="small">• ${e}</div>`).join('')}</div>`;
+    box.appendChild(d);
+  });
+}
+
+/* ---------- fasting window ---------- */
+function renderFast(){
+  document.getElementById('eatStart').value=plan.window.start;
+  document.getElementById('eatEnd').value=plan.window.end;
+  let e=toMin(plan.window.end)-toMin(plan.window.start); if(e<=0)e+=1440;
+  document.getElementById('eLen').textContent=Math.round(e/60)+'h';
+  document.getElementById('fLen').textContent=Math.round((1440-e)/60)+'h';
+  document.getElementById('remMeals').checked=!!settings.remMeals;
+  document.getElementById('remSupps').checked=!!settings.remSupps;
+  document.getElementById('remFast').checked=!!settings.remFast;
+  const on=('Notification'in window)&&Notification.permission==='granted';
+  document.getElementById('nOn').style.background=on?'#2e7d51':'#fff';
+  document.getElementById('nOn').style.borderColor=on?'#2e7d51':'#d6e3f0';
+  document.getElementById('nOn').textContent=on?'✓':'•';
+  document.getElementById('notifState').textContent=on?'Phone alerts are on':'Tap to enable phone alerts';
+}
+function saveWindow(){
+  plan.window.start=document.getElementById('eatStart').value||'12:00';
+  plan.window.end=document.getElementById('eatEnd').value||'20:00';
+  save(K.plan,plan); renderFast(); renderRing(); toast('Window saved'); go('today');
+}
+function shiftWindowPrompt(){ go('fast'); }
+function saveSettings(){
+  settings.remMeals=document.getElementById('remMeals')?.checked ?? settings.remMeals;
+  settings.remSupps=document.getElementById('remSupps')?.checked ?? settings.remSupps;
+  settings.remFast=document.getElementById('remFast')?.checked ?? settings.remFast;
+  const h=document.getElementById('setHeight'); const s=document.getElementById('setStart');
+  if(h&&h.value) plan.height=+h.value;
+  if(s&&s.value) plan.startWeight=+s.value;
+  save(K.set,settings); save(K.plan,plan);
+}
+
+/* ---------- notifications ---------- */
+function enableNotifs(){
+  if(!('Notification'in window)){ toast('This browser has no notifications — reminders will show in-app'); return; }
+  Notification.requestPermission().then(p=>{ settings.notif=(p==='granted'); save(K.set,settings); renderFast();
+    if(p==='granted'){ notify('FastFit reminders on','You’ll get nudges for meals, supplements and your fasting window while the app is open.'); }
+    else toast('Permission not granted — reminders will show in-app'); });
+}
+function notify(title,body){
+  try{ if(('Notification'in window)&&Notification.permission==='granted'){ new Notification(title,{body, icon:iconDataURL()}); return; } }catch(e){}
+  toast('🔔 '+title+' — '+body);
+}
+function checkReminders(){
+  const dk=todayKey(); fired[dk]=fired[dk]||{};
+  const t=nowMin();
+  // meals
+  const push=(cond,id,time,title,body)=>{
+    if(!cond) return; const key=id+'@'+time;
+    if(fired[dk][key]) return;
+    if(t>=toMin(time) && t<toMin(time)+2){ fired[dk][key]=true; save(K.fired,fired); notify(title,body); }
+  };
+  if(settings.remMeals) plan.meals.forEach(m=> push(true,m.id,m.time,'🍽️ '+m.name,m.items[0]));
+  if(settings.remSupps) plan.supps.forEach(s=> push(true,s.id,s.time,'💊 '+s.slot,s.items[0]));
+  if(settings.remFast){
+    push(true,'eatopen',plan.window.start,'🍽️ Eating window open','Time to break your fast — start with '+(plan.meals[0]?.name||'Meal 1')+'.');
+    push(true,'faststart',plan.window.end,'⏳ Fast begins','Kitchen closed. Water, black coffee or plain tea from here.');
+  }
+}
+
+/* ---------- progress ---------- */
+function bmiOf(w){ const h=(plan.height||185)/100; return +(w/(h*h)).toFixed(1); }
+function renderProgress(){
+  progress.sort((a,b)=>a.date.localeCompare(b.date));
+  if(progress.length){
+    const last=progress[progress.length-1], first=progress[0];
+    document.getElementById('pNow').textContent=last.weight;
+    const ch=(last.weight-first.weight);
+    document.getElementById('pChange').textContent=(ch>0?'+':'')+ch.toFixed(1);
+    document.getElementById('pBmi').textContent=bmiOf(last.weight);
+  } else {
+    document.getElementById('pNow').textContent=plan.startWeight||'—';
+    document.getElementById('pChange').textContent='0.0';
+    document.getElementById('pBmi').textContent=plan.startWeight?bmiOf(plan.startWeight):'—';
+  }
+  drawChart();
+  const hw=document.getElementById('histWrap');
+  if(!progress.length){ hw.innerHTML='<div class="muted small">No entries yet.</div>'; return; }
+  let rows=progress.slice().reverse().map((e,i)=>{
+    const idx=progress.length-1-i;
+    return `<tr><td>${e.date}</td><td class="n">${e.weight}</td><td class="n">${e.waist||'—'}</td><td class="n">${bmiOf(e.weight)}</td><td>${e.note||''}<button class="del" onclick="delEntry(${idx})">✕</button></td></tr>`;
+  }).join('');
+  hw.innerHTML=`<table><tr><th>Date</th><th>Kg</th><th>Waist</th><th>BMI</th><th>Notes</th></tr>${rows}</table>`;
+}
+function addEntry(){
+  const d=document.getElementById('inDate').value||todayKey();
+  const w=parseFloat(document.getElementById('inWeight').value);
+  if(!w){ toast('Enter a weight'); return; }
+  const e={date:d, weight:w,
+    waist:parseFloat(document.getElementById('inWaist').value)||null,
+    chest:parseFloat(document.getElementById('inChest').value)||null,
+    bf:parseFloat(document.getElementById('inBf').value)||null,
+    note:document.getElementById('inNote').value.trim()};
+  const ex=progress.findIndex(x=>x.date===d);
+  if(ex>=0) progress[ex]=e; else progress.push(e);
+  save(K.prog,progress);
+  ['inWeight','inWaist','inChest','inBf','inNote'].forEach(id=>document.getElementById(id).value='');
+  renderProgress(); toast('Saved '+d);
+}
+function delEntry(i){ progress.splice(i,1); save(K.prog,progress); renderProgress(); }
+function drawChart(){
+  const c=document.getElementById('chart'), ctx=c.getContext('2d');
+  const W=c.width, H=c.height; ctx.clearRect(0,0,W,H);
+  if(progress.length<1){ ctx.fillStyle='#98a6bb'; ctx.font='13px sans-serif'; ctx.fillText('Log a weigh-in to see your trend',16,H/2); return; }
+  const pts=progress.map(e=>e.weight);
+  const min=Math.min(...pts)-1, max=Math.max(...pts)+1, span=(max-min)||1;
+  const padL=36,padR=12,padT=14,padB=22;
+  const x=i=> padL+(progress.length===1?0.5:i/(progress.length-1))*(W-padL-padR);
+  const y=v=> padT+(1-(v-min)/span)*(H-padT-padB);
+  // grid
+  ctx.strokeStyle='#eef2f8'; ctx.lineWidth=1;
+  for(let g=0;g<=3;g++){ const yy=padT+g/3*(H-padT-padB); ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke();
+    ctx.fillStyle='#98a6bb'; ctx.font='10px sans-serif'; ctx.fillText((max-g/3*span).toFixed(0),4,yy+3); }
+  // line
+  ctx.strokeStyle='#2E5A8C'; ctx.lineWidth=2.5; ctx.beginPath();
+  progress.forEach((e,i)=>{ const xx=x(i), yy=y(e.weight); i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); }); ctx.stroke();
+  // fill
+  ctx.lineTo(x(progress.length-1),H-padB); ctx.lineTo(x(0),H-padB); ctx.closePath();
+  ctx.fillStyle='rgba(46,90,140,.08)'; ctx.fill();
+  // dots
+  ctx.fillStyle='#2E5A8C'; progress.forEach((e,i)=>{ ctx.beginPath(); ctx.arc(x(i),y(e.weight),3.2,0,7); ctx.fill(); });
+}
+
+/* ---------- excel upload ---------- */
+function handleUpload(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const msg=document.getElementById('uploadMsg');
+  if(typeof XLSX==='undefined'){ msg.innerHTML='<span style="color:#c0392b">Couldn’t load the Excel reader (no connection?). The built-in plan is active; try upload again when online.</span>'; return; }
+  msg.textContent='Reading…';
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const got=parseWorkbook(wb);
+      save(K.plan,plan);
+      renderAll();
+      msg.innerHTML='<span style="color:#2e7d51">Loaded: '+got.join(', ')+'. Your plan is updated.</span>';
+      toast('Plan updated from Excel');
+    }catch(err){ msg.innerHTML='<span style="color:#c0392b">Could not read that file. Built-in plan kept.</span>'; }
+  };
+  r.readAsArrayBuffer(f);
+}
+function sheetAOA(wb,name){
+  const s=wb.Sheets[name]; if(!s) return null;
+  return XLSX.utils.sheet_to_json(s,{header:1,defval:''});
+}
+function findSheet(wb,kw){ return wb.SheetNames.find(n=>n.toLowerCase().includes(kw)); }
+function parseWorkbook(wb){
+  const got=[];
+  // ----- client details -----
+  const woName=findSheet(wb,'workout')||wb.SheetNames[0];
+  const wo=sheetAOA(wb,woName);
+  if(wo){
+    wo.forEach(row=>{
+      row.forEach((cell,ci)=>{
+        const c=String(cell).toLowerCase();
+        const nxt=row[ci+1]!==undefined?row[ci+1]:(row[ci+2]!==undefined?row[ci+2]:'');
+        if(c.includes('height')&&String(nxt).match(/\d/)) { const v=parseFloat(String(nxt).replace(/[^\d.]/g,'')); if(v>100&&v<250) plan.height=v; }
+        if(c.startsWith('weight')&&String(nxt).match(/\d/)) { const v=parseFloat(String(nxt).replace(/[^\d.]/g,'')); if(v>30&&v<400) plan.startWeight=v; }
+      });
+    });
+    // workout days
+    const days=parseWorkoutDays(wo);
+    if(days.length){ plan.workout=days; got.push('workout'); }
+  }
+  // ----- food -----
+  const fName=findSheet(wb,'food');
+  const fa=fName?sheetAOA(wb,fName):null;
+  if(fa){ const meals=parseMeals(fa); if(meals.length){ plan.meals=meals; deriveWindow(); got.push('meals'); } }
+  // ----- supplements -----
+  const sName=findSheet(wb,'supp');
+  const sa=sName?sheetAOA(wb,sName):null;
+  if(sa){ const sp=parseSupps(sa); if(sp.length){ // keep existing times where possible
+      sp.forEach((n,i)=>{ const old=plan.supps.find(o=>o.slot.toLowerCase()===n.slot.toLowerCase()); if(old) n.time=old.time; });
+      plan.supps=sp; got.push('supplements'); } }
+  if(!got.length) got.push('client details');
+  return got;
+}
+function parseMeals(aoa){
+  // find a row whose cells contain "Meal"
+  let hdr=-1;
+  for(let i=0;i<aoa.length;i++){ if(aoa[i].some(c=>/meal\s*\d/i.test(String(c)))){ hdr=i; break; } }
+  if(hdr<0) return [];
+  const cols=[]; aoa[hdr].forEach((c,ci)=>{ const m=String(c).match(/(meal\s*\d|snack)[^\d]*(\d{1,2}:\d{2})?/i); if(m){ const tm=String(c).match(/(\d{1,2}:\d{2})/); cols.push({ci, name:m[1].replace(/\s+/g,' ').replace(/meal/i,'Meal').replace(/snack/i,'Snack'), time:tm?tm[1]:''}); } });
+  if(!cols.length) return [];
+  const meals=cols.map((col,idx)=>{ const items=[]; for(let r=hdr+1;r<Math.min(aoa.length,hdr+8);r++){ const v=String(aoa[r]?.[col.ci]||'').trim(); if(v && !/^swaps|^tips/i.test(v)) items.push(v.replace(/^\(|\)$/g,'')); }
+    return {id:'m'+(idx+1), name:col.name, time:col.time||['12:00','16:00','17:30','19:30'][idx]||'12:00', items:items.filter(x=>x&&!x.startsWith('(')) }; });
+  return meals.filter(m=>m.items.length);
+}
+function parseSupps(aoa){
+  let hdr=-1;
+  for(let i=0;i<aoa.length;i++){ const joined=aoa[i].map(c=>String(c).toLowerCase()).join('|'); if(joined.includes('morning')&&joined.includes('night')){ hdr=i; break; } }
+  if(hdr<0) return [];
+  const slots=[]; aoa[hdr].forEach((c,ci)=>{ const s=String(c).trim(); if(s) slots.push({ci,slot:s}); });
+  const defTimes={'morning':'08:00','night':'22:00','before training':'17:00','after training':'18:30'};
+  return slots.map((col,idx)=>{ const items=[]; for(let r=hdr+1;r<Math.min(aoa.length,hdr+9);r++){ const v=String(aoa[r]?.[col.ci]||'').trim(); if(v && !/^important/i.test(v)) items.push(v); }
+    const key=col.slot.toLowerCase();
+    return {id:'s'+(idx+1), slot:col.slot, time:defTimes[key]||'12:00', items}; }).filter(s=>s.items.length);
+}
+function parseWorkoutDays(aoa){
+  const days=[]; let cur=null;
+  const dayRe=/day\s*\d/i;
+  for(let i=0;i<aoa.length;i++){
+    const row=aoa[i].map(c=>String(c).trim());
+    const dayCell=row.find(c=>dayRe.test(c));
+    if(dayCell){
+      if(cur) days.push(cur);
+      const focus=row.filter(c=>c && !dayRe.test(c) && c.length>2).join(' ') || 'Training';
+      cur={day:dayCell.replace(/\s+/g,' '), focus:focus, ex:[]};
+      continue;
+    }
+    if(cur){
+      const name=row[0];
+      if(name && !/exercise/i.test(name) && name.length>1){
+        const sets=row[1], reps=row[2];
+        let line=name; if(sets&&reps) line+=` — ${sets}×${reps}`; else if(sets) line+=` — ${sets}`;
+        cur.ex.push(line);
+      }
+    }
+  }
+  if(cur) days.push(cur);
+  return days.filter(d=>d.ex.length);
+}
+function deriveWindow(){
+  const times=plan.meals.map(m=>m.time).filter(Boolean).map(toMin).sort((a,b)=>a-b);
+  if(times.length){ plan.window.start=fromMin(times[0]); plan.window.end=fromMin(Math.min(1439,times[times.length-1]+30)); }
+}
+function fromMin(m){ return pad(Math.floor(m/60)%24)+':'+pad(m%60); }
+
+/* ---------- calendar export ---------- */
+function downloadICS(){
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FastFit//EN'];
+  const mk=(time,summary)=>{ const [h,m]=time.split(':'); 
+    lines.push('BEGIN:VEVENT','SUMMARY:'+summary,
+      'RRULE:FREQ=DAILY',
+      'DTSTART:'+dtstamp(h,m),'DURATION:PT10M',
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+summary,'TRIGGER:PT0M','END:VALARM',
+      'END:VEVENT'); };
+  plan.meals.forEach(m=>mk(m.time,'🍽️ '+m.name));
+  plan.supps.forEach(s=>mk(s.time,'💊 '+s.slot));
+  mk(plan.window.start,'🍽️ Eating window opens');
+  mk(plan.window.end,'⏳ Fast begins');
+  lines.push('END:VCALENDAR');
+  const blob=new Blob([lines.join('\r\n')],{type:'text/calendar'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='FastFit-reminders.ics'; a.click();
+  toast('Calendar file downloaded');
+}
+function dtstamp(h,m){ const d=new Date(); d.setHours(+h,+m,0,0); 
+  return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(+h)+pad(+m)+'00'; }
+
+/* ---------- misc ---------- */
+function iconDataURL(){ return 'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" rx="28" fill="#2E5A8C"/><text x="64" y="86" font-size="64" text-anchor="middle">🔥</text></svg>'); }
+let toastT;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600); }
+function go(v){
+  document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+  document.getElementById('v-'+v).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  window.scrollTo(0,0);
+  window.dispatchEvent(new CustomEvent('viewchange',{detail:v}));
+}
+function loadDefaults(force){ if(force && !confirm('Reset meals, supplements and workout to the built-in plan? Your weigh-ins and ticks stay.')) return;
+  const keepH=plan.height, keepS=plan.startWeight; plan=defaultPlan(); plan.height=keepH; plan.startWeight=keepS; save(K.plan,plan); renderAll(); toast('Built-in plan restored'); }
+function wipe(){ if(!confirm('Erase ALL FastFit data on this device? This cannot be undone.')) return;
+  Object.values(K).forEach(k=>localStorage.removeItem(k)); location.reload(); }
+
+function renderAll(){
+  renderRing(); renderToday(); renderMeals(); renderSupps(); renderWorkout(); renderFast(); renderProgress();
+  document.getElementById('setHeight').value=plan.height||185;
+  document.getElementById('setStart').value=plan.startWeight||135;
+  document.getElementById('inDate').value=todayKey();
+}
+
+/* ---------- boot ---------- */
+renderAll();
+setInterval(()=>{ renderRing(); checkReminders(); }, 20000);
+renderRing();
+// Register service worker (offline + installable) — only works over http(s), not file://
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+// Install prompt (Android/Chrome)
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e;
+  const b=document.getElementById('installBtn'); if(b) b.classList.remove('hide'); });
+function installApp(){
+  if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.finally(()=>{ deferredPrompt=null; const b=document.getElementById('installBtn'); if(b) b.classList.add('hide'); }); }
+  else { toast('On iPhone: tap Share, then “Add to Home Screen”'); }
+}
+window.addEventListener('appinstalled', ()=>{ const b=document.getElementById('installBtn'); if(b) b.classList.add('hide'); toast('FastFit installed 🎉'); });
+</script>
+<script type="module">
+/* ============================================================================
+   FastFit — FORM COACH
+   Front-camera calisthenics rep counter + form scorer, on-device via MediaPipe.
+   Pose infrastructure (lazy tasks-vision load, mirrored landmark reading) is
+   adapted from the Slow Form tai-chi coach; the scoring engine below is a
+   rep-based calisthenics scorer built for this app.
+   ========================================================================== */
+
+/* ---------- geometry ---------- */
+const D = Math.PI/180;
+const wrap = d => ((d+180)%360+360)%360-180;
+const clamp = (v,a,b)=> v<a?a:v>b?b:v;
+const clamp01 = v => clamp(v,0,1);
+const segAng = (a,b)=> Math.atan2(b.y-a.y, b.x-a.x)/D;
+const jointAng = (a,b,c)=> Math.abs(wrap(segAng(b,a)-segAng(b,c)));   // angle at b
+const mid = (a,b)=>({x:(a.x+b.x)/2, y:(a.y+b.y)/2});
+const gauss = (err,tol)=> 100*Math.exp(-Math.pow(err/tol,2));
+
+/* ---------- exercise library ---------------------------------------------
+   metric: value that is HIGH at the top (extended) and LOW at the bottom
+           (contracted). A rep = drop below `bottom`, then rise above `top`.
+   depth : min metric reached in a rep, mapped shallow->0 .. deep->1.
+   form  : per-frame checks, averaged over the rep (err -> gaussian score).
+   -------------------------------------------------------------------------- */
+const EX = {
+  squat: { name:'Squats', icon:'🦵', tag:'Legs · glutes', orient:'front', legs:true, unit:'reps',
+    tip:'Face the phone. Feet shoulder-width. Sit back and down as if to a chair, knees tracking over toes. Controlled — 2 s down. Only go as low as stays pain-free.',
+    metric:f=>f.kneeMean, top:160, bottom:118, shallow:148, deep:98,
+    deepCue:'Sit a little deeper', 
+    form:[{label:'back angle', val:f=>f.lean, ideal:20, tol:17},
+          {label:'even knees', val:f=>Math.abs(f.kneeL-f.kneeR), ideal:0, tol:22}] },
+
+  pushup: { name:'Push-ups', icon:'💪', tag:'Chest · arms', orient:'side', legs:false, unit:'reps',
+    tip:'Set the phone low to your side so it sees your whole body. Lower until elbows ~90°, keep a straight line head-to-heels. Knees down is fine to start.',
+    metric:f=>f.elbowMean, top:155, bottom:102, shallow:130, deep:82,
+    deepCue:'Lower a bit further',
+    form:[{label:'straight body', val:f=>Math.abs(180-f.bodyLine), ideal:0, tol:18},
+          {label:'even elbows', val:f=>Math.abs(f.elbowL-f.elbowR), ideal:0, tol:24}] },
+
+  lunge: { name:'Lunges', icon:'🚶', tag:'Legs', orient:'side', legs:true, unit:'reps',
+    tip:'Step forward and lower the back knee toward the floor; front knee ~90°. Keep the torso tall. Alternate legs. Each lower counts as a rep.',
+    metric:f=>f.kneeMin, top:160, bottom:120, shallow:148, deep:98,
+    deepCue:'Drop the back knee lower',
+    form:[{label:'upright torso', val:f=>f.lean, ideal:6, tol:15}] },
+
+  bridge: { name:'Glute Bridge', icon:'🍑', tag:'Glutes · knee-safe', orient:'side', legs:true, unit:'reps',
+    tip:'Lie on your back, knees bent, feet flat. Drive hips up to a straight line shoulder-hip-knee, squeeze, lower. Very kind to the knees.',
+    metric:f=>f.hipMean, top:150, bottom:120, shallow:130, deep:168, deepInvert:true,
+    deepCue:'Push the hips higher',
+    form:[{label:'even hips', val:f=>Math.abs(f.hipL-f.hipR), ideal:0, tol:20}] },
+
+  jacks: { name:'Jumping Jacks', icon:'⭐', tag:'Cardio', orient:'front', legs:true, unit:'reps',
+    tip:'Face the phone with room to the sides. Arms up overhead and feet apart, then back together. Each full open-and-close is one rep.',
+    metric:f=>100*(1-f.openness), top:70, bottom:40, shallow:55, deep:18,
+    deepCue:'Reach arms fully overhead',
+    form:[{label:'even arms', val:f=>Math.abs(f.shoulderL-f.shoulderR), ideal:0, tol:28}] },
+
+  highknees: { name:'High Knees', icon:'🏃', tag:'Cardio · legs', orient:'front', legs:true, unit:'reps',
+    tip:'Face the phone. March / jog on the spot lifting each knee to hip height. Each knee lift is a rep. Stay tall.',
+    metric:f=>f.hipFlexMin, top:150, bottom:118, shallow:140, deep:96,
+    deepCue:'Lift the knee higher',
+    form:[{label:'upright torso', val:f=>f.lean, ideal:0, tol:16}] },
+
+  plank: { name:'Plank', icon:'🧘', tag:'Core · hold', orient:'side', legs:false, unit:'sec', hold:true,
+    tip:'Set the phone low at your side. Forearms/hands down, hold a straight line head-to-heels. The timer runs only while your body stays straight.',
+    form:[{label:'straight body', val:f=>Math.abs(180-f.bodyLine), ideal:0, tol:14}] },
+};
+const EX_ORDER = ['squat','pushup','lunge','bridge','jacks','highknees','plank'];
+
+/* ---------- feature extraction from mirrored, aspect-corrected joints ------ */
+function feats(J){
+  const torsoLen = Math.hypot(J.shMid.x-J.hipMid.x, J.shMid.y-J.hipMid.y) || 1;
+  const anMid = mid(J.anL, J.anR);
+  const kneeL=jointAng(J.hipL,J.knL,J.anL), kneeR=jointAng(J.hipR,J.knR,J.anR);
+  const elbL=jointAng(J.shL,J.elL,J.wrL),  elbR=jointAng(J.shR,J.elR,J.wrR);
+  const hipL=jointAng(J.shL,J.hipL,J.knL), hipR=jointAng(J.shR,J.hipR,J.knR);
+  const hipFlexL=jointAng(J.shL,J.hipL,J.knL), hipFlexR=jointAng(J.shR,J.hipR,J.knR);
+  const openArms = clamp01((((J.shMid.y-(J.wrL.y+J.wrR.y)/2)/torsoLen)+0.15)/1.05);
+  const openLegs = clamp01((Math.abs(J.anR.x-J.anL.x)/torsoLen-0.35)/0.85);
+  return {
+    kneeL, kneeR, kneeMean:(kneeL+kneeR)/2, kneeMin:Math.min(kneeL,kneeR),
+    elbowL:elbL, elbowR:elbR, elbowMean:(elbL+elbR)/2,
+    hipL, hipR, hipMean:(hipL+hipR)/2,
+    hipFlexMin:Math.min(hipFlexL,hipFlexR),
+    shoulderL:jointAng(J.hipL,J.shL,J.elL), shoulderR:jointAng(J.hipR,J.shR,J.elR),
+    lean:Math.abs(wrap(segAng(J.hipMid,J.shMid)-90)),
+    bodyLine:jointAng(J.shMid,J.hipMid,anMid),
+    openness:(openArms+openLegs)/2,
+    torsoLen,
+  };
+}
+function depthScore(ex, minMetric, maxMetric){
+  if(ex.deepInvert){ return clamp01((maxMetric-ex.shallow)/(ex.deep-ex.shallow))*100; }
+  return clamp01((ex.shallow-minMetric)/(ex.shallow-ex.deep))*100;
+}
+function frameForm(ex, f){
+  let s=0,n=0, worst={s:101,label:''};
+  for(const c of ex.form){ const v=c.val(f); if(!isFinite(v)) continue;
+    const sc=gauss(Math.abs(v-c.ideal), c.tol); s+=sc; n++;
+    if(sc<worst.s) worst={s:sc,label:c.label}; }
+  return { score:n?s/n:100, worst };
+}
+
+/* ==========================================================================
+   CAMERA + POSE  (adapted from Slow Form)
+   ========================================================================== */
+const LMI = { shL:11, shR:12, elL:13, elR:14, wrL:15, wrR:16, hipL:23, hipR:24, knL:25, knR:26, anL:27, anR:28 };
+const vid = document.getElementById('vid');
+const cv  = document.getElementById('pose');
+const ctx = cv.getContext('2d');
+const stageEl = document.getElementById('stage');
+let landmarker=null, stream=null, hasCam=false, lastVideoTime=-1;
+let raf=0, DPR=1, CW=0, CH=0;
+let J=null, F=null, rawLm=null, personSeen=false, legsValid=false;
+
+function sizeCanvas(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  const r = stageEl.getBoundingClientRect();
+  CW = Math.max(1, Math.round(r.width)); CH = Math.max(1, Math.round(r.height));
+  cv.width = CW*DPR; cv.height = CH*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+new ResizeObserver(sizeCanvas).observe(stageEl);
+
+async function startCamera(){
+  el('camErr').textContent='';
+  stream = await navigator.mediaDevices.getUserMedia({
+    video:{ facingMode:'user', width:{ideal:640}, height:{ideal:480} }, audio:false });
+  vid.srcObject = stream; await vid.play(); sizeCanvas();
+  const { PoseLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14");
+  const fs = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  landmarker = await PoseLandmarker.createFromOptions(fs, {
+    baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task", delegate:"GPU" },
+    runningMode:"VIDEO", numPoses:1, minPoseDetectionConfidence:0.5, minTrackingConfidence:0.5 });
+  hasCam = true;
+}
+function stopCamera(){
+  hasCam=false; cancelAnimationFrame(raf); raf=0;
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  try{ landmarker&&landmarker.close&&landmarker.close(); }catch(e){}
+  landmarker=null; lastVideoTime=-1; J=null; F=null; rawLm=null; personSeen=false;
+  ctx.clearRect(0,0,CW,CH);
+}
+function readPose(now){
+  if(!landmarker || vid.readyState<2) return;
+  if(vid.currentTime===lastVideoTime) return; lastVideoTime=vid.currentTime;
+  let res; try{ res=landmarker.detectForVideo(vid, now); }catch(e){ return; }
+  const lm = res && res.landmarks && res.landmarks[0];
+  if(!lm){ personSeen=false; rawLm=null; return; }
+  rawLm = lm;
+  const asp = (vid.videoWidth||4)/(vid.videoHeight||3);
+  const g = i => ({ x:(1-lm[i].x)*asp, y:1-lm[i].y, v:(lm[i].visibility??1) });
+  const j={}; for(const k in LMI) j[k]=g(LMI[k]);
+  j.hipMid=mid(j.hipL,j.hipR); j.shMid=mid(j.shL,j.shR);
+  const core=[j.shL,j.shR,j.hipL,j.hipR].reduce((a,q)=>a+q.v,0)/4;
+  personSeen = core>0.5;
+  legsValid = Math.min(j.anL.v,j.anR.v,j.knL.v,j.knR.v) > 0.4;
+  if(!personSeen) return;
+  J=j; F=feats(j);
+}
+
+/* ---------- skeleton overlay (aligned to the mirrored, object-fit:cover video) */
+const LINKS=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],
+             [23,25],[25,27],[24,26],[26,28]];
+function coverMap(){
+  const vw=vid.videoWidth||4, vh=vid.videoHeight||3;
+  const scale=Math.max(CW/vw, CH/vh), dw=vw*scale, dh=vh*scale;
+  const ox=(CW-dw)/2, oy=(CH-dh)/2;
+  return n => ({ x: ox + (1-n.x)*dw, y: oy + n.y*dh });   // mirror x to match video
+}
+function drawSkeleton(quality){
+  ctx.clearRect(0,0,CW,CH);
+  if(!rawLm || !personSeen) return;
+  const m=coverMap();
+  const good = quality>=75, ok = quality>=55;
+  const col = good ? '#63c09a' : ok ? '#e9c46a' : '#e4694f';
+  ctx.save();
+  ctx.lineWidth=Math.max(3, CW*0.011); ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.strokeStyle=col; ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=6;
+  ctx.beginPath();
+  for(const [a,b] of LINKS){ if(rawLm[a]&&rawLm[b]){ const pa=m(rawLm[a]),pb=m(rawLm[b]); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y);} }
+  ctx.stroke();
+  ctx.shadowBlur=0; ctx.fillStyle=col;
+  for(const i of [11,12,13,14,15,16,23,24,25,26,27,28]){ if(rawLm[i]){ const p=m(rawLm[i]); ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(3,CW*0.012),0,7); ctx.fill(); } }
+  // head
+  if(rawLm[0]){ const h=m(rawLm[0]); ctx.beginPath(); ctx.arc(h.x,h.y,Math.max(8,CW*0.03),0,7); ctx.stroke(); }
+  ctx.restore();
+}
+
+/* ==========================================================================
+   SESSION / SCORING STATE
+   ========================================================================== */
+const el = id => document.getElementById(id);
+let exId='squat', running=false, phase='top';
+let reps=[], repMin=999, repMax=-999, repFormSum=0, repFormN=0, repStart=0;
+let holdSec=0, holdFormSum=0, holdFormN=0, lastTick=0;
+let countdownT=0, liveForm=100;
+let beepCtx=null;
+
+function beep(freq=880, dur=0.09, vol=0.05){
+  try{ beepCtx=beepCtx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=beepCtx.createOscillator(), g=beepCtx.createGain();
+    o.frequency.value=freq; o.connect(g); g.connect(beepCtx.destination);
+    g.gain.setValueAtTime(vol, beepCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, beepCtx.currentTime+dur);
+    o.start(); o.stop(beepCtx.currentTime+dur);
+  }catch(e){}
+}
+
+function resetSet(){ reps=[]; phase='top'; repMin=999; repMax=-999; repFormSum=0; repFormN=0;
+  holdSec=0; holdFormSum=0; holdFormN=0; liveForm=100; el('repNum').textContent='0'; }
+
+function tickCoach(dt){
+  const ex=EX[exId];
+  el('repUnit').textContent=ex.unit;
+  if(!personSeen || (ex.legs && !legsValid)){
+    el('coachCue').textContent = personSeen ? 'Step back — I need to see your legs' : 'Step back so your whole body is in frame';
+    setPhasePill('wait','Find you…'); setForm(0); drawSkeleton(0); return;
+  }
+  const ff = frameForm(ex, F);
+  liveForm = liveForm*0.7 + ff.score*0.3;
+  setForm(liveForm); drawSkeleton(liveForm);
+
+  if(ex.hold){                                   /* ----- timed hold ----- */
+    const straight = Math.abs(180-F.bodyLine) < 22;
+    if(straight){ holdSec+=dt; holdFormSum+=ff.score; holdFormN++;
+      setPhasePill('up','Hold'); el('coachCue').textContent='Hold steady — straight line head to heels'; }
+    else { setPhasePill('down','Fix line'); el('coachCue').textContent='Straighten up — hips are '+(F.bodyLine<180?'sagging':'piking'); }
+    el('repNum').textContent=Math.floor(holdSec);
+    return;
+  }
+
+  const mv = ex.metric(F);                        /* ----- rep counting ----- */
+  if(phase==='top'){
+    el('coachCue').textContent='Ready — '+(ex.name==='Glute Bridge'?'lower and lift':'go down');
+    setPhasePill('up','Up');
+    if(mv < ex.bottom){ phase='bottom'; repMin=mv; repMax=mv; repFormSum=0; repFormN=0; repStart=performance.now(); }
+  } else {
+    setPhasePill('down','Down');
+    el('coachCue').textContent = ex.name==='Glute Bridge' ? 'Squeeze at the top' : 'Now drive back up';
+    repMin=Math.min(repMin,mv); repMax=Math.max(repMax,mv);
+    repFormSum+=ff.score; repFormN++;
+    if(mv > ex.top){                              // rep complete
+      const dep = ex.deepInvert ? depthScore(ex,repMin,repMax) : depthScore(ex,repMin,repMax);
+      const formAvg = repFormN?repFormSum/repFormN:100;
+      const dur = (performance.now()-repStart)/1000;
+      let sc = 0.55*dep + 0.45*formAvg;
+      if(dur < 1.0) sc *= 0.9;                    // rushed
+      sc = clamp(Math.round(sc),0,100);
+      const worst = dep < 62 ? ex.deepCue : (formAvg<66 ? capitalize(fixCue(ff.worst.label)) : null);
+      reps.push({ score:sc, depth:Math.round(dep), form:Math.round(formAvg), dur:+dur.toFixed(1), cue:worst });
+      el('repNum').textContent=reps.length;
+      el('lastRep').textContent = 'Rep '+reps.length+': '+sc+'%  ·  '+(worst||'clean, controlled ✔');
+      beep(sc>=80?920:660, 0.08, 0.05);
+      phase='top';
+    }
+  }
+}
+function fixCue(l){ return ({'back angle':'sit back, chest up','even knees':'keep knees even','straight body':'keep a straight line','even elbows':'lower evenly','upright torso':'stand tall','even hips':'lift hips evenly','even arms':'raise both arms level'})[l]||l; }
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function setForm(p){ el('formBar').style.width=clamp(p,0,100).toFixed(0)+'%';
+  el('formBar').style.background = p>=75?'#63c09a':p>=55?'#e9c46a':'#e4694f'; }
+function setPhasePill(cls,txt){ const p=el('phasePillC'); p.className='phasepill'+(cls==='down'?' down':cls==='up'?' up':''); p.textContent=txt; }
+
+/* ---------- render loop ---------- */
+function loop(now){
+  if(!hasCam){ raf=0; return; }
+  raf=requestAnimationFrame(loop);
+  const dt = lastTick?Math.min(0.1,(now-lastTick)/1000):0.016; lastTick=now;
+  readPose(now);
+  if(countdownT>0){
+    countdownT-=dt; const n=Math.ceil(countdownT);
+    el('countdown').textContent = n>0?n:'Go!';
+    drawSkeleton(liveForm);
+    if(countdownT<=0){ el('countdown').classList.add('hide'); running=true; lastTick=now; }
+    return;
+  }
+  if(running) tickCoach(dt);
+  else if(hasCam) drawSkeleton(personSeen?liveForm:0);
+}
+
+/* ==========================================================================
+   PUBLIC UI  (window.Coach)
+   ========================================================================== */
+function renderExGrid(){
+  el('exGrid').innerHTML='';
+  EX_ORDER.forEach(id=>{ const e=EX[id];
+    const b=document.createElement('button');
+    b.className='exbtn'+(id===exId?' sel':''); b.onclick=()=>selectEx(id);
+    b.innerHTML=`<span class="ic">${e.icon}</span><span class="nm">${e.name}</span><span class="tg">${e.tag}</span>`;
+    el('exGrid').appendChild(b);
+  });
+  el('exTip').textContent=EX[exId].tip;
+}
+function selectEx(id){ exId=id; renderExGrid();
+  if(running){ endSet(false); }
+  el('sumCard').classList.add('hide');
+}
+function toggleCam(){
+  if(hasCam){ endSet(false); stopCamera();
+    el('btnCam').textContent='Start camera'; el('btnCam').classList.add('sec');
+    el('btnSet').disabled=true; el('camPlaceholder').classList.remove('hide');
+    el('hud').classList.add('hide'); el('coachFoot').classList.add('hide'); return; }
+  el('btnCam').textContent='Starting…';
+  startCamera().then(()=>{
+    el('camPlaceholder').classList.add('hide');
+    el('btnCam').textContent='Stop camera'; el('btnCam').classList.remove('sec');
+    el('btnSet').disabled=false;
+    lastTick=0; if(!raf) raf=requestAnimationFrame(loop);
+  }).catch(err=>{
+    el('btnCam').textContent='Start camera';
+    el('camErr').textContent = 'Could not start the camera: '+(err&&err.message||err)+'. Check the camera permission for this site, and note the camera needs https (or add the app to your home screen).';
+  });
+}
+function toggleSet(){
+  if(!hasCam) return;
+  if(running || countdownT>0){ endSet(true); return; }
+  // start: countdown
+  resetSet();
+  el('hud').classList.remove('hide'); el('coachFoot').classList.remove('hide');
+  el('sumCard').classList.add('hide');
+  el('lastRep').textContent=''; el('btnSet').textContent='End set';
+  el('countdown').classList.remove('hide'); countdownT=3.0; beep(700,0.08,0.04);
+}
+function endSet(showSummary){
+  const wasRunning = running || holdSec>0 || reps.length>0;
+  running=false; countdownT=0; el('countdown').classList.add('hide');
+  el('btnSet').textContent='Start set';
+  el('hud').classList.add('hide'); el('coachFoot').classList.add('hide');
+  ctx.clearRect(0,0,CW,CH);
+  if(showSummary && wasRunning) summarize();
+}
+function grade(v){ return v>=90?'A':v>=80?'B':v>=70?'C':v>=60?'D':'E'; }
+function gradeColor(v){ return v>=80?'#2e7d51':v>=70?'#2E5A8C':v>=60?'#c08a1e':'#c0392b'; }
+
+function summarize(){
+  const ex=EX[exId]; let avg, entry, stats;
+  if(ex.hold){
+    const sec=Math.floor(holdSec); avg=Math.round(holdFormN?holdFormSum/holdFormN:0);
+    entry={ date:Date.now(), ex:ex.name, unit:'sec', count:sec, avg };
+    stats=[['Held', sec+'s'],['Form', avg+'%']];
+    el('sumMsg').textContent = sec<15 ? 'Good start — build the hold a few seconds at a time.'
+      : avg>=80 ? 'Strong, straight plank. Nice work.' : 'Solid hold — watch the hips staying level next time.';
+  } else {
+    const n=reps.length; avg = n?Math.round(reps.reduce((a,r)=>a+r.score,0)/n):0;
+    const best = n?Math.max(...reps.map(r=>r.score)):0;
+    const dep = n?Math.round(reps.reduce((a,r)=>a+r.depth,0)/n):0;
+    entry={ date:Date.now(), ex:ex.name, unit:'reps', count:n, avg };
+    stats=[['Reps', n],['Avg', avg+'%'],['Best', best+'%'],['Depth', dep+'%']];
+    const weak = reps.filter(r=>r.cue).map(r=>r.cue);
+    el('sumMsg').textContent = n===0 ? 'No full reps detected — make sure your whole body is in frame and try the full range.'
+      : avg>=85 ? 'Excellent, controlled reps. Add a rep or a set next time.'
+      : weak.length>n/2 ? 'Most common fix: '+mode(weak)+'.'
+      : 'Good set — keep every rep as clean as your best.';
+  }
+  el('sumGrade').textContent = entry.count>0 ? grade(entry.avg)+'  ·  '+entry.avg+'%' : '—';
+  el('sumGrade').style.color = gradeColor(entry.avg);
+  el('sumEx').textContent = ex.name+' · '+new Date().toLocaleDateString();
+  el('sumStats').innerHTML = stats.map(s=>`<div class="box2"><div class="v">${s[1]}</div><div class="l">${s[0]}</div></div>`).join('');
+  el('sumCard').classList.remove('hide');
+  if(entry.count>0) saveHist(entry);
+}
+function mode(a){ const m={}; let best=a[0],bn=0; a.forEach(x=>{m[x]=(m[x]||0)+1; if(m[x]>bn){bn=m[x];best=x;}}); return best; }
+
+/* ---------- history (localStorage, shares FastFit's storage convention) ---- */
+const HK='ff_coach';
+function saveHist(entry){
+  let h=[]; try{ h=JSON.parse(localStorage.getItem(HK)||'[]'); }catch(e){}
+  h.unshift(entry); h=h.slice(0,30); localStorage.setItem(HK, JSON.stringify(h));
+  renderHist(); if(window.toast) window.toast('Set scored — grade '+grade(entry.avg));
+}
+function renderHist(){
+  let h=[]; try{ h=JSON.parse(localStorage.getItem(HK)||'[]'); }catch(e){}
+  if(!h.length){ el('coachHist').innerHTML='<div class="muted small">No sets logged yet. Your scored sets will appear here.</div>'; return; }
+  el('coachHist').innerHTML = h.slice(0,8).map(e=>{
+    const d=new Date(e.date), day=d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    return `<div class="histrow"><span>${e.ex} · ${e.count} ${e.unit}</span><span><span class="g">${grade(e.avg)}</span> &nbsp;${e.avg}% · ${day}</span></div>`;
+  }).join('');
+}
+function clearSummary(){ el('sumCard').classList.add('hide'); }
+
+window.Coach = { toggleCam, toggleSet, clearSummary };
+
+/* ---------- lifecycle: run only while the Coach tab is open ---------- */
+window.addEventListener('viewchange', e=>{
+  if(e.detail!=='coach'){ if(hasCam){ Coach.toggleCam(); } }
+});
+renderExGrid(); renderHist();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "FastFit — Plan Tracker & Form Coach",
+  "short_name": "FastFit",
+  "description": "Track your fasting window, meals, supplements and progress — and get on-device form scoring for your calisthenics workouts.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f7fb",
+  "theme_color": "#2E5A8C",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
