@@ -32,6 +32,3 @@ coach; the rep-counting and calisthenics scoring engine is purpose-built here.
 The service worker caches the MediaPipe library, WASM and pose model on first
 online use so scoring keeps working offline afterwards.
 
-## Deploy
-Serve the folder over HTTPS (e.g. GitHub Pages). `index.html` is self-contained
-apart from the SheetJS and MediaPipe CDNs, which are cached after first load.
